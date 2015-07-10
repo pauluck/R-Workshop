@@ -4,8 +4,7 @@
 
 #1 Write a loop that calculates 12-factorial.
 # 12!=12X11X10X9X8X7X6X5X4X3X2X1
-# The last multiplcation of 1 is not necessary
-# To save a step, this will be skipped and looped from 12:2
+# The last multiplcation of 1 is not necessary. To save a step, will be skipped and looped from 12:2
 y<-1
 for (x in 12:2)
   {
