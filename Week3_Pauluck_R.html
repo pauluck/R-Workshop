@@ -71,9 +71,8 @@ img {
 <div id="assignment-description" class="section level3">
 <h3>Assignment description</h3>
 <p>Your task is to study the dataset and the associated description of the data (i.e. “data dictionary”). You may need to look around a bit, but it’s there! You should take the data, and create a data frame with a subset of the columns (and if you like rows) in the dataset. You should include the column that indicates edible or poisonous and three or four other columns. You should also add meaningful column names and replace the abbreviations used in the data-for example, in the appropriate column, “e” might become “edible.” Your deliverable is the R code to perform these transformation tasks. <br></p>
-</div>
-<div id="read-mushroom-data-file" class="section level1">
-<h1>Read mushroom data file</h1>
+<div id="read-mushroom-data-file" class="section level4">
+<h4>Read mushroom data file</h4>
 <pre class="r"><code>mushr_full_df&lt;-read.csv(&quot;https://archive.ics.uci.edu/ml/machine-learning-databases/mushroom/agaricus-lepiota.data&quot;, header= FALSE, sep=&quot;,&quot;)
 head (mushr_full_df)</code></pre>
 <pre><code>##   V1 V2 V3 V4 V5 V6 V7 V8 V9 V10 V11 V12 V13 V14 V15 V16 V17 V18 V19 V20
@@ -91,8 +90,8 @@ head (mushr_full_df)</code></pre>
 ## 5   n   a   g
 ## 6   k   n   g</code></pre>
 </div>
-<div id="read-mushroom-data-dictionary-file" class="section level1">
-<h1>Read mushroom data dictionary file</h1>
+<div id="read-mushroom-data-dictionary-file" class="section level4">
+<h4>Read mushroom data dictionary file</h4>
 <pre class="r"><code>mushr_dict &lt;- read.table(&quot;C:\\m_dictionary.txt&quot;,row.names = 1, sep=&quot;:&quot;)
 head(mushr_dict)</code></pre>
 <pre><code>##                                                                                          V2
@@ -103,8 +102,8 @@ head(mushr_dict)</code></pre>
 ## bruises?                                                                     bruises=t,no=f
 ## odor            almond=a,anise=l,creosote=c,fishy=y,foul=f,musty=m,none=n,pungent=p,spicy=s</code></pre>
 </div>
-<div id="take-the-first-column-of-dictionary-and-use-it-as-the-rows-names-of-the-data-file" class="section level1">
-<h1>Take the first column of dictionary and use it as the rows names of the data file</h1>
+<div id="take-the-first-column-of-dictionary-and-use-it-as-the-rows-names-of-the-data-file" class="section level4">
+<h4>Take the first column of dictionary and use it as the rows names of the data file</h4>
 <pre class="r"><code>names(mushr_full_df) &lt;- row.names(mushr_dict)
 head(mushr_full_df)</code></pre>
 <pre><code>##   class cap-shape cap-surface cap-color bruises? odor gill-attachment
@@ -143,8 +142,8 @@ head(mushr_full_df)</code></pre>
 ## 5                 n          a       g
 ## 6                 k          n       g</code></pre>
 </div>
-<div id="select-class-column-and-four-others" class="section level1">
-<h1>Select “class” column and four others</h1>
+<div id="select-class-column-and-four-others" class="section level4">
+<h4>Select “class” column and four others</h4>
 <pre class="r"><code>mushr_sub_df &lt;- subset(mushr_full_df, select=c(&quot;class&quot;,&quot;cap-color&quot;,&quot;habitat&quot;, &quot;ring-number&quot;,&quot;odor&quot;))
 head(mushr_sub_df)</code></pre>
 <pre><code>##   class cap-color habitat ring-number odor
@@ -155,16 +154,16 @@ head(mushr_sub_df)</code></pre>
 ## 5     e         g       g           o    n
 ## 6     e         y       g           o    a</code></pre>
 </div>
-<div id="create-function-to-replace-abrev.-with-its-translation-from-data-dictionary-uses-gsub-with-regex" class="section level1">
-<h1>Create function to replace abrev. with its translation from data dictionary (uses gsub with regex)</h1>
+<div id="create-function-to-replace-abrev.-with-its-translation-from-data-dictionary-uses-gsub-with-regex" class="section level4">
+<h4>Create function to replace abrev. with its translation from data dictionary (uses gsub with regex)</h4>
 <pre class="r"><code>getTranslation &lt;- function(a) {
-  return(sapply(1:5, function(x)
+  return(sapply(1:nrow(mushr_sub_df), function(x)
     gsub(paste('(^|.*,)(.*)=',mushr_sub_df[x,a],'.*',sep=&quot;&quot;),&quot;\\2&quot;,mushr_dict[a,1] )
   ))
 }</code></pre>
 </div>
-<div id="recurse-through-column-names-of-sub-data-file-and-translate-its-elements" class="section level1">
-<h1>Recurse through column names of sub data file and translate its elements</h1>
+<div id="recurse-through-column-names-of-sub-data-file-and-translate-its-elements" class="section level4">
+<h4>Recurse through column names of sub data file and translate its elements</h4>
 <pre class="r"><code>mushr_translated_df &lt;- sapply(colnames(mushr_sub_df), function(x) getTranslation(x))
 head(mushr_translated_df)</code></pre>
 <pre><code>##      class    cap-color habitat   ring-number odor     
@@ -172,7 +171,9 @@ head(mushr_translated_df)</code></pre>
 ## [2,] &quot;edible&quot; &quot;yellow&quot;  &quot;grasses&quot; &quot;one&quot;       &quot;almond&quot; 
 ## [3,] &quot;edible&quot; &quot;white&quot;   &quot;meadows&quot; &quot;one&quot;       &quot;anise&quot;  
 ## [4,] &quot;poison&quot; &quot;white&quot;   &quot;urban&quot;   &quot;one&quot;       &quot;pungent&quot;
-## [5,] &quot;edible&quot; &quot;gray&quot;    &quot;grasses&quot; &quot;one&quot;       &quot;none&quot;</code></pre>
+## [5,] &quot;edible&quot; &quot;gray&quot;    &quot;grasses&quot; &quot;one&quot;       &quot;none&quot;   
+## [6,] &quot;edible&quot; &quot;yellow&quot;  &quot;grasses&quot; &quot;one&quot;       &quot;almond&quot;</code></pre>
+</div>
 </div>
 
 

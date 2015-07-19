@@ -2,7 +2,6 @@ name: Publish Document
 account: rpubs
 server: rpubs.com
 bundleId:
-        https://api.rpubs.com/api/v1/document/93160/a37ff921b39f4ca4af75a73d83842149
-url:
-        http://rpubs.com/publish/claim/93160/166685b5962c449784d0b1f215362fb6
-when: 1437327416.54045
+        https://api.rpubs.com/api/v1/document/93167/cd2c26ac25ea47c2863caf8447bc2c90
+url: http://rpubs.com/puneetauluck/93167
+when: 1437329474.0523

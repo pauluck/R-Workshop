@@ -9,40 +9,40 @@ output: html_document
 Your task is to study the dataset and the associated description of the data (i.e. "data dictionary"). You may need to look around a bit, but it's there! You should take the data, and create a data frame with a subset of the columns (and if you like rows) in the dataset. You should include the column that indicates edible or poisonous and three or four other columns. You should also add meaningful column names and replace the abbreviations used in the data-for example, in the appropriate column, "e" might become "edible." Your deliverable is the R code to perform these transformation tasks. <br>
 
 
-# Read mushroom data file
+#### Read mushroom data file
 ```{r}
 mushr_full_df<-read.csv("https://archive.ics.uci.edu/ml/machine-learning-databases/mushroom/agaricus-lepiota.data", header= FALSE, sep=",")
 head (mushr_full_df)
 ```
 
-# Read mushroom data dictionary file
+#### Read mushroom data dictionary file
 ```{r}
 mushr_dict <- read.table("C:\\m_dictionary.txt",row.names = 1, sep=":")
 head(mushr_dict)
 ```
 
-# Take the first column of dictionary and use it as the rows names of the data file
+#### Take the first column of dictionary and use it as the rows names of the data file
 ```{r}
 names(mushr_full_df) <- row.names(mushr_dict)
 head(mushr_full_df)
 ```
 
-# Select "class" column and four others
+#### Select "class" column and four others
 ```{r}
 mushr_sub_df <- subset(mushr_full_df, select=c("class","cap-color","habitat", "ring-number","odor"))
 head(mushr_sub_df)
 ```
 
-# Create function to replace abrev. with its translation from data dictionary (uses gsub with regex)
+#### Create function to replace abrev. with its translation from data dictionary (uses gsub with regex)
 ```{r}
 getTranslation <- function(a) {
-  return(sapply(1:5, function(x)
+  return(sapply(1:nrow(mushr_sub_df), function(x)
     gsub(paste('(^|.*,)(.*)=',mushr_sub_df[x,a],'.*',sep=""),"\\2",mushr_dict[a,1] )
   ))
 }
 ```
 
-# Recurse through column names of sub data file and translate its elements
+#### Recurse through column names of sub data file and translate its elements
 ```{r}
 mushr_translated_df <- sapply(colnames(mushr_sub_df), function(x) getTranslation(x))
 head(mushr_translated_df)
