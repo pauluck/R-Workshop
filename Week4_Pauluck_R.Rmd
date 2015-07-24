@@ -1,0 +1,47 @@
+---
+title: "Week 4 R Assignment"
+author: "Puneet Auluck"
+date: "July 26, 2015"
+output: html_document
+---
+
+###Exploratory Data Analysis in R
+
+`Source: data from within R - USArrests`
+```{r}
+data("USArrests")
+head(USArrests)
+```
+
+### <span style="color:blue">**Histogram** </span>
+<span style="color:red">How is the urban population distributed?</span><br>
+It appears that the urban population averages between 60 and 70.
+```{r echo=FALSE}
+#hist(USArrests$UrbanPop)
+UrbanPopInfo <-hist(USArrests$UrbanPop, main="Urban Population",col=terrain.colors(5), 
+                    xlab="Urban Population", breaks=seq(25,100, by=5))
+```
+
+
+### <span style="color:blue">**Boxplot**</span>
+
+<span style="color:red">From looking at the few records of the data, it is obvious more arrests are made due to assaults.  How about murder and rape?  Which of the two is reported most?</span><br>
+The box plot below indicates that on average more arrests are made due to rape assaults.
+```{r}
+# use colors() to get different colors
+boxplot(USArrests$Murder,USArrests$Rape, names=c("Murder","Rape"),col=c("red", "royalblue2"),main="USA Arrests")
+# x-axis label
+# side: which side(1=bottom, 2=left, 3=top, 4=right)
+# line: which margin line, starts at 0
+mtext("Assault Type", side=1, line=3, font=2, col="blue")
+```
+
+### <span style="color:blue">**Scatterplot**</span>
+
+<span style="color:red">Do highly populated urban areas have more crimes?</span> <br>
+It seems higher populated areas experience more crimes.
+```{r}
+plot((USArrests$Rape+USArrests$Murder+USArrests$Assault) ~ USArrests$UrbanPop, col="dark red", main="Population Vs. Arrests",
+     ylab="# of Arrests", xlab="Population")
+
+```
