@@ -1,0 +1,70 @@
+---
+title: "Final Assgnment SQL/R/Math"
+author: "Puneet Auluck"
+date: "July 24, 2015"
+output: html_document
+---
+
+### <span style="color:blue">**Export WorkTravel Data**</span>
+
+```{r}
+wt <- read.table("C:\\worktravel.csv", sep=",", header = TRUE)
+head(wt)
+
+```
+### <span style="color:blue">**Summarize data**</span>
+```{r}
+suppressMessages(require(plyr))
+wt_sub_tr <- data.frame(type = wt$traveltype, method = wt$method, 
+                        totaltime = wt$traffictime + wt$waittime + wt$traveltime,
+                        cost = wt$travelcost)
+head(wt_sub_tr)
+wt_summary <- ddply(wt_sub_tr, .(type,method), summarise, 
+                    mean=mean(totaltime),
+                    sd=sd(totaltime), cost=sum(cost)/5)
+
+head(wt_summary)
+
+```
+
+### <span style="color:blue">**Plot total travel time based on the method of travel used**</span>
+```{r}
+plot(wt_sub_tr$totaltime~wt_sub_tr$method, 
+     main = "Work Travel", 
+     xlab="Travel Methods", 
+     ylab="Total Travel Time",
+     col=c("gold","blue","red"))
+```
+
+With the summary table and the plot, we can conclude that it is faster if I take the car but more economical if I take the ferry to work.  However, by alternating different routes througout the week, I can save on both time and money.
+
+
+
+### <span style="color:blue">**Probability**</span>
+**What is the probability that if I take the Bus to work, my wait time is no more than 5 mins?**
+
+Let us look at the numbers for only bus:
+```{r}
+subset(wt, traveltype=="Leaving" & method=="Bus-Trains")
+```
+Based on the sample gathered, the probability my wait time will be no more than 5 minutes is: `r 2/5`.
+
+**I left work at 3:30pm and I just reached home at 5:35pm. My husband thinks since the car was home and I'm over 2 hours late, I must have taken the ferry.  What is the probability he is right?**
+
+```{r}
+subset(wt_sub_tr, (method=="Bus-Trains" | method=="Train-Ferry-Train") & type=="Arriving")
+
+```
+![Caption for the picture.](C:\Users\Minnie\Desktop\worktravel.png)
+
+$${P(ferry|travel>=125mins)=}$$  $$\frac{p(travel>=125mins|ferry)p(ferry)}{p(travel>=125|ferry)p(ferry)+p(travel<125|bus)p(bus)}=$$
+$$\frac{5/5*1/2}{(5/5*1/2)+(2/5*1/2)}=$$
+$${0.7142}$$
+
+The probability that he is right is 71.42%.
+
+
+******
+******
+
+
