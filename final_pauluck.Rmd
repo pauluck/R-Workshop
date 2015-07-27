@@ -6,6 +6,14 @@ output: html_document
 ---
 
 ### <span style="color:blue">**Export WorkTravel Data**</span>
+Data: WorkTravel <br>
+My commute consists of roughly 2 hours to work and 2 hours back.  
+Method1: Bus-Train with wait and traffic time <br>
+Method2: Train-Ferry with wait but no traffic time <br>
+Method3: Car with no wait but traffic time <br>
+
+The data was inserted in Postgres DB and then exported to csv file: worktravel.csv. The data covers 3 weeks where each week consists one of the routes described above.
+
 
 ```{r}
 wt <- read.table("C:\\worktravel.csv", sep=",", header = TRUE)

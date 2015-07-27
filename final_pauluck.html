@@ -70,6 +70,8 @@ img {
 
 <div id="export-worktravel-data" class="section level3">
 <h3><span style="color:blue"><strong>Export WorkTravel Data</strong></span></h3>
+<p>Data: WorkTravel <br> My commute consists of roughly 2 hours to work and 2 hours back.<br />Method1: Bus-Train with wait and traffic time <br> Method2: Train-Ferry with wait but no traffic time <br> Method3: Car with no wait but traffic time <br></p>
+<p>The data was inserted in Postgres DB and then exported to csv file: worktravel.csv. The data covers 3 weeks where each week consists one of the routes described above.</p>
 <pre class="r"><code>wt &lt;- read.table(&quot;C:\\worktravel.csv&quot;, sep=&quot;,&quot;, header = TRUE)
 head(wt)</code></pre>
 <pre><code>##   traveldate traveltype routeid waittime traffictime     method traveltime
