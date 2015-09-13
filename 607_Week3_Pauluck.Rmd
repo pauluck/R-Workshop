@@ -1,0 +1,82 @@
+---
+title: "607 Week 3 R Assignment"
+author: "Puneet Auluck"
+date: "September 12, 2015"
+output: html_document
+---
+
+<span style="color:blue"> Your task is to choose one dataset, then study the data and its associated description of the data (i.e. "data dictionary"). You should take the data, and create an R data frame with a subset of the columns (and if you like rows) in the dataset. Your deliverable is the R code to perform these transformation tasks. </span>
+
+**I chose the *flag* data from UCI data sets.  It contains the country names, and their various flag attributes. I have taken a subset of Eurpe and Africa/Asia landmass regions, and columns that contain number of bars and strips within a flag.**
+
+```{r  message=F, warning=F}
+
+library(dplyr) # Selecting and filtering
+library(magrittr) # Pipes
+library(knitr) # kable
+
+```
+
+```{r}
+
+# Read the flags.data file online
+flags_fulldump_df <- read.csv("https://archive.ics.uci.edu/ml/machine-learning-databases/flags/flag.data", header= FALSE, sep=",")
+
+# Add column names (obtained from data dictionary)
+colnames(flags_fulldump_df) <- c("name", "landmass", "zone", 
+                                 "area", "population", "language", 
+                                 "religion", "bars", "stripes", 
+                                 "colours", "red", "green", 
+                                 "blue", "gold", "white", 
+                                 "black", "orange", "mainhue", 
+                                 "circles", "crosses", "saltires",
+                                 "quarters", "sunstars", "crescent", 
+                                 "triangle", "icon", "animate", 
+                                 "text", "topleft", "botright")
+
+# Find the structure of flags data frame
+str(flags_fulldump_df)
+
+# Display few lines of df
+kable(head (flags_fulldump_df))
+
+
+```
+
+
+```{r}
+
+# Create subset containing columns: landmass(Europe & Africa/Asia), country name, bars and stripes
+flags_subset_df <- flags_fulldump_df %>%
+                   select(landmass, name, bars, stripes) %>%
+                   filter(landmass %in% c(3,4))
+
+kable(head(flags_subset_df))
+
+# Set all zero values to NA so that they will not counted when aggregating count of bars and stripes
+flags_subset_df[flags_subset_df == 0] <- NA
+kable(head(flags_subset_df))
+
+# Group the values by Europe and Africa/Asia, then count the bars and stripes
+flags_sum_df <- flags_subset_df %>%
+                   group_by(landmass) %>%
+                   summarise(totalCountries = sum(!is.na(name)),
+                            totalBars = sum(!is.na(bars)),
+                            totalStripes=sum(!is.na(stripes)))
+
+kable(head(flags_sum_df))
+
+# Add percentages
+flags_percent_df <- flags_sum_df %>%
+                mutate(percentBars = round(totalBars/totalCountries,digits=2),
+                          percentStripes = round(totalStripes/totalCountries,digits=2),
+                       percentNone = round((totalCountries-(totalBars+totalStripes))/totalCountries, digits=2))
+
+# Add rownames
+rownames(flags_percent_df) <- c("Europe", "Africa/Asia")
+#kable(flags_percent_df[,c(5,6,7)])
+kable(flags_percent_df %>% select(percentBars, percentStripes, percentNone))
+```
+
+** It appears stripes are common in majority of Europe and Africa/Asia country flags. **
+
