@@ -1,0 +1,98 @@
+---
+title: "607 Week 4 Assignment"
+author: "Puneet Auluck"
+date: "September 19, 2015"
+output: html_document
+geometry: margin=1in
+---
+
+```{r message=F, warning=F}
+library(stringr)
+library(knitr)
+
+```
+
+```{r}
+questions <- c("4a.", "4b.", "4c.", "4d.", "4e.","5.","6a.","6b. (i).","6b. (ii)","6c. (i)", "6c. (ii)")
+
+pattern   <- c("[0-9]+\\$", 
+               "\\b[a-z]{1,4}\\b", 
+               ".*?\\.txt$",
+               "\\d{2}/\\d{2}/\\d{4}",
+               "<(.+?)>.+?</\\1>",
+               "\\d+[$]",
+               "first use \\[at\\] and then \\[dot\\]",
+               "[:digit:]",
+               "[[:digit::]]",
+               "\\D",
+               "\\d")
+
+descr     <- c("Extract whole numbers followed by $ sign",
+               "Words that contain 1 to 4 letters from alphabets",
+               "Strings that end with .txt",
+               "Date in format mm/dd/yyyy with padding",
+               "Extract tags and information within tags",
+               "4a. expression altered",
+               "Transform to valid e-mail",
+               "Should extract every character in square brackets, that is :,d,i,g and t. The correct expression is [[:digits]] (shown below)",
+               "Above expression corrected",
+               "Extract all non-numeric characters",
+               "Extract only digits")
+
+test_cases <- c("Amount is written as \\$32, not 23$ or 45$.",
+                "This is an example to extract only 1-4 letter words.",
+                "vector: stringr.pdf, stringr.txt",
+                "Today is 4/30/2015 not 09/09/2009.",
+                "\\<title> Assignment 4 \\</title>",
+                "Amount is written as \\$32, not 23$ or 45$.",
+                "chunkylover53[at]aol[dot]com",
+                "chunkylover53[at]aol[dot]com",
+                "chunkylover53[at]aol[dot]com",
+                "chunkylover53[at]aol[dot]com",
+                "chunkylover53[at]aol[dot]com")
+
+function_used <- c("str_extract_all",
+                   "str_extract_all",
+                   "str_extract_all",
+                   "str_extract_all",
+                   "str_extract_all",
+                   "str_extract_all",
+                   "str_replace_all",
+                   "str_extract_all",
+                   "str_extract_all",
+                   "str_extract_all",
+                   "str_extract_all"
+                   )
+
+apply_stringr <- c(paste(unlist((str_extract_all(test_cases[1],pattern[1]))), sep = ",", collapse=" "),
+                   paste(unlist((str_extract_all(test_cases[2],pattern[2]))), sep = ",", collapse=" "),
+                   paste(unlist((str_extract_all(
+                                strsplit(test_cases[3], ", ")[[1]],
+                                pattern[3]))), 
+                                sep = ",", 
+                                collapse=" "),
+                   paste(unlist((str_extract_all(test_cases[4],pattern[4]))), sep = ",", collapse=" "),
+                   paste("\\", unlist((str_extract_all(
+                                    "<title> Assignment 4 \\</title>",
+                                    pattern[5]))), 
+                                    sep="", 
+                                    collapse=" "),
+                   paste(unlist((str_extract_all(test_cases[6],pattern[6]))), sep = ",", collapse=" "),
+                   str_replace_all(str_replace_all(test_cases[7],"\\[at\\]","@"),"\\[dot\\]","."),
+                   paste(unlist((str_extract_all(test_cases[8],"[:digit]"))), sep = ",", collapse=" "),
+                   paste(unlist((str_extract_all(test_cases[9],"[[:digit:]]"))), sep = ",", collapse=" "),
+                   paste(unlist((str_extract_all(test_cases[10],pattern[10]))), sep = ",", collapse=" "),
+                   paste(unlist((str_extract_all(test_cases[11],pattern[11]))), sep = ",", collapse=" ")
+                   )
+
+results <- data.frame(questions, gsub("\\", "\\\\\\\\",pattern, fixed="TRUE"), 
+                      descr, test_cases, function_used, apply_stringr)
+colnames(results) <- c("Question", "Pattern","Description","Example","str_function","Output")
+kable(results)
+
+```
+
+----------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
+
+
