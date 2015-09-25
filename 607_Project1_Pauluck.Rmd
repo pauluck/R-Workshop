@@ -1,0 +1,95 @@
+---
+title: "607 Project 1"
+author: "Puneet Auluck"
+date: "September 24, 2015"
+output: html_document
+---
+***
+<span style="color:blue">**Load the packages for later use**</span><br>
+
+```{r message=F, warning=F}
+library(dplyr) # Selecting and filtering
+library(magrittr) # Pipes
+library(knitr) # kable
+library(stringr) # String manipulation
+```
+
+<span style="color:blue">**Read file as a string**</span><br>
+```{r message=F, warning=F}
+RawFile <- paste(readLines("tournamentinfo.txt"), collapse = "\n")
+
+# This is a partial view of how the string looks like
+paste(readLines("tournamentinfo.txt", n=20), collapse = "\n")
+
+```
+
+<span style="color:blue">**Clean up and create a table for each player per row**</span><br>
+```{r}
+# remove unnecessary characters and merge 2 lines of player stats into one
+splitRawFile <- gsub("\n\\s+|--+","",RawFile) %>% # remove lines containing #----------#
+                gsub("\\|\\s*\n", "\n", .) %>% # merge each player stats into 1 line
+                strsplit(.,"\n") # split the file containing one player per line
+
+# read into a table
+df_chess <- read.table(textConnection(splitRawFile[[1]]), sep="|", skip = 1)
+kable(head(df_chess))
+```
+
+<span style="color:blue">**Get subset of columns that are needed**</span><br>
+```{r}
+# Only need first 12 columns of data and give them names
+cnames <- c("PlayerNum","Player","State","TotalPoints", "R1","R2","R3","R4","R5","R6","R7","Rating")
+df_chess_subset <- df_chess[c(1,2,11,3:10,12)]
+colnames(df_chess_subset) <- cnames
+kable(head(df_chess_subset))
+```
+
+<span style="color:blue">**Trim leading and trailing whitespace in Player names and State**</span><br>
+```{r}
+df_chess_subset$State <- str_trim(df_chess_subset$State)
+df_chess_subset$Player <- str_trim(df_chess_subset$Player)
+
+```
+
+<span style="color:blue">**Clean up Rating column**</span><br>
+```{r}
+df_chess_subset$Rating <- as.character(gsub("^.*R:\\s+(\\d+)(\\D|\\s).*$","\\1",df_chess_subset$Rating))
+kable(head(df_chess_subset))
+```
+
+<span style="color:blue">**Create another data frame containing only the Player number and Rating**</span><br>
+```{r}
+df_chess_rating <- df_chess_subset[c("PlayerNum","Rating")]
+head(df_chess_rating)
+
+```
+
+
+<span style="color:blue">**Replace Player number in R1:R7 to their Ratings, respectively**</span><br>
+```{r}
+df_chess_subset[5:11] <- lapply(df_chess_subset[5:11], function(x) 
+                                df_chess_rating[as.numeric(str_extract_all(x,"\\d{1,}")),"Rating"])
+kable(head(df_chess_subset))
+```
+
+<span style="color:blue">**Now calculate the average and extract columns that are needed**</span><br>
+```{r}
+df_chess_avg <- df_chess_subset %>% 
+                group_by(Player) %>% 
+                mutate(Avg = round(mean(as.numeric(c(R1,R2,R3,R4,R5,R6,R7)), na.rm=T))) %>%
+                select(Player, State, TotalPoints, as.numeric(Rating), Avg)
+
+kable(head(df_chess_avg))
+```
+
+<span style="color:blue">**Write data frame to .csv file and read it from there as well**</span><br>
+```{r}
+# Write .csv
+write.csv(df_chess_avg, file = "chess.csv", row.names = FALSE, quote = FALSE)
+
+# Read .csv
+kable(head(read.csv(file = "chess.csv", row.names = 1)))
+```
+
+
+***
