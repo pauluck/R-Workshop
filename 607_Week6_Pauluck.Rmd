@@ -1,0 +1,66 @@
+---
+title: "Assignment 6"
+author: "Puneet Auluck"
+date: "October 2, 2015"
+output: html_document
+---
+------
+
+<span style="color:blue">**We will analyze the following chart to compare the arrival delays for the two airlines: _Alaska_ and _AM West_.**</span><br>
+![](airline_chart.jpg)
+
+```{r message=F, warning=F}
+library(tidyr)
+library(dplyr)
+library(magrittr)
+library(knitr)
+library(ggplot2)
+```
+
+
+
+
+```{r, collapse=TRUE}
+# Read the csv file 
+airline <- read.csv(file = "airline_arrivals.csv", stringsAsFactors = FALSE)
+kable(airline)
+
+# Make table from wide to long and get delayed rows
+airline_delayed <- airline %>%
+  gather("ArrivalCity", "Flights", 3:7) %>%
+  arrange(Airline) %>%
+  filter(ArrivalStatus == "delayed") %>%
+  select(Airline, ArrivalCity, Flights)
+
+
+# Get on time rows for percentage calculations
+airline_ontime<- airline %>%
+  gather("ArrivalCity", "Flights", 3:7) %>%
+  arrange(Airline) %>%
+  filter(ArrivalStatus == "on time") %>%
+  select(Airline, ArrivalCity, Flights)
+
+# Add DelayRate column
+airline_delayed["DelayRate"] <- round(airline_delayed$Flights / (airline_delayed$Flights+airline_ontime$Flights),2)
+kable(airline_delayed)
+
+# Plot airlines by number of delays
+p <- ggplot(airline_delayed, aes(fill=Airline, x=ArrivalCity, y=Flights))
+p + geom_bar(position="dodge", stat="identity") + labs(title = "Delay in Numbers")
+
+```
+
+<span style="color:blue">**From looking at number of delays chart above, it appears AM West has more delays than Alaska 80% (4/5) of the time.  Phoenix being the number one and that is because more flights land there than Alaska airlines.**</span><br>
+
+
+```{r}
+# Plot airlines by percentage of delays
+p2 <- ggplot(airline_delayed, aes(fill=Airline, x=ArrivalCity, y=DelayRate))
+p2 + geom_bar(position="dodge", stat="identity")  + scale_fill_brewer(palette="Set2") + labs(title = "Delay in Percentages")
+
+```
+
+<span style="color:blue">**Looking at the rate of delays in both airlines, again AM West has more delays, however this time it is at all destinations, including Seattle!**</span><br>
+```
+
+------
