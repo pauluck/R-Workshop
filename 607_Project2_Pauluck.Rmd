@@ -1,0 +1,220 @@
+---
+title: "IS 607 Project 2"
+author: "Puneet Auluck"
+date: "October 6, 2015"
+output: 
+  html_document:
+    toc: true
+---
+
+
+```{r message=F, warning=F}
+# Get the packages we need.
+require(tidyr)
+require(dplyr)
+require(knitr)
+require(stringr)
+require(ggplot2)
+```
+
+
+## <span style="color:#B05F3C;">**Data Set 1 - School Grades - By Puneet Auluck (Myself)**</span>
+<div style="border: 3px solid #B05F3C;">
+```{r}
+# Read csv file
+grades <- read.csv(file = "C:\\project2\\grades.csv", stringsAsFactors = FALSE)
+kable(head(grades))
+```
+
+</div>
+
+### <span style="color:#B05F3C">1. Is there a correlation between how well a student did in the class and their school attendance?</span>
+
+<div style="border: 3px solid #B05F3C;">
+
+<span style="color:green">&nbsp;**The original grades.csv wide format is made into long by gathering Subject and corresponding Grade.**</span>
+```{r}
+grades_l <- grades %>% gather("Subject", "Grades", 2:6)
+kable(head(grades_l %>% arrange(desc(Days.Present))))
+```
+
+</div> <br>
+<div style="border: 3px solid #B05F3C;">
+
+<span style="color:green">&nbsp; **Let's find grade average for each student.**</span>
+
+
+
+```{r}
+grades_avg <- grades_l %>% group_by(Student,Days.Present) %>%
+              summarise(Avg=mean(Grades))
+              
+kable(grades_avg %>% arrange(desc(Days.Present)))
+
+```
+
+<span style="color:green">&nbsp;**Student, Winston Cadiz, with highest attendance has grade average of 74.6 and student, Ronald Rosario, with lowest attendance has 78.4.  Based on grades.csv table, there no indication of a positive correlation between the days a student is present in school and how well he/she does academically.**</span>
+
+<span style="color:green">&nbsp;**Here is a graph to visually represent the conclusion.**</span>
+
+
+```{r  fig.height=4}
+grades_plot <- ggplot(grades_avg, aes(y=Avg, x=Days.Present)) + geom_point(shape=1)
+grades_plot + geom_smooth()
+
+```
+
+</div>
+
+### <span style="color:#B05F3C">2. How are the grades by subject?<span>
+<div style="border: 3px solid #B05F3C;">
+
+```{r  fig.height=4}
+grades_plot2 <- ggplot(data= grades_l, aes(y=Grades, x=Days.Present, fill=factor(Subject))) + geom_point() 
+grades_plot2 + geom_smooth() + facet_wrap(~Subject)
+
+```
+
+<span style="color:green">&nbsp; **It appears, aside from Science and Technology, the grades are affected by the number of days a student is present in class.**</span>
+</div>
+
+## <span style="color:#9191FF;">**Data Set 2 - Living Former Presidents - By Youqing Xiang**</span>
+
+<div style="border: 3px solid #9191FF;">
+
+```{r}
+# Read csv file
+presidents <- read.csv(file = "C:\\project2\\presidents.csv", stringsAsFactors = FALSE)
+kable(presidents)
+```
+
+</div> <br>
+<div style="border: 3px solid #9191FF;">
+<span style="color:green">&nbsp;**Tidy data**</span>
+
+```{r}
+presidents_tidy <- presidents %>%
+                   separate(OfficeTerm, into=c("OfficeTermStart", "OfficeTermEnd"), sep="-") %>%
+                   mutate(OfficeYears = as.numeric(OfficeTermEnd)-as.numeric(OfficeTermStart)) %>%
+                   separate(BirthDate, into=c("BirthDate", "Age"), sep="\\(age ")
+presidents_tidy$Age <- str_replace(presidents_tidy$Age, "\\)$","")
+kable(presidents_tidy)
+```
+
+</div>
+
+### <span style="color:#9191FF"> 1. Give the list of presidents who had one term(4 years in the office) and presidents who had two terms(8 years in the office)</span>
+
+<div style="border: 3px solid #9191FF;">
+
+```{r}
+kable(presidents_tidy[presidents_tidy$OfficeYears == 4,])
+kable(presidents_tidy[presidents_tidy$OfficeYears == 8,])
+```
+
+</div>
+
+### <span style="color:#9191FF">2. Which president is the oldest one?</span>
+
+<div style="border: 3px solid #9191FF;">
+
+```{r}
+kable(presidents_tidy %>% select(President,Age) %>% filter(Age == max(presidents_tidy$Age)))
+
+```
+
+</div>
+
+### <span style="color:#9191FF">3. What is the average age of all the presidents?</span>
+<div style="border: 3px solid #9191FF;">
+
+```{r}
+mean(as.numeric(as.character(presidents_tidy$Age)))
+```
+
+</div>
+
+## <span style="color:#4A9586;">**Data Set: 3 - U.S. International Trade - By Jason Joseph**</span>
+<div style="border: 3px solid #4A9586;">
+
+```{r}
+# Read csv file
+trade <- read.csv(file = "C:\\project2\\trades.csv", stringsAsFactors = FALSE)
+colnames(trade) <-c("Period","Type","2013-Exports","2013-Imports","2014-Exports","2014-Imports","2015-Exports","2015-Imports")
+kable(trade)
+```
+
+</div> <br>
+<div style="border: 3px solid #4A9586;">
+<span style="color:green">&nbsp;**Drop unwanted rows and add missing data in first column.**</span>
+
+```{r}
+
+trade[c(seq(4, 13, 3)), 1] <- trade[c(seq(3,12,3)), 1] 
+trade <- trade[c( -1, -2,c(seq(-11, -5, 3))),] #drop unwanted rows
+kable(trade)
+```
+
+</div><br>
+
+<div style="border: 3px solid #4A9586;">
+<span style="color:green">&nbsp;**Tidy data**</span>
+```{r}
+trade_tidy <- trade %>% gather("TradeType", "Trades", 3:8) %>%
+              separate(TradeType, into=c("Year","TradeType"), sep="-")
+
+trade_tidy$Trades <- as.numeric(gsub(",", "", as.character(trade_tidy$Trades)))
+trade_tidy$Type <- str_trim(trade_tidy$Type)
+kable(trade_tidy)
+
+```
+
+</div><br>
+
+<div style="border: 3px solid #4A9586;">
+<span style="color:green">&nbsp;**Summarise the data**</span>
+```{r}
+trade_summary <- trade_tidy %>% group_by(Period, Type, TradeType) %>% summarise(Avg=mean(Trades)) %>% arrange(desc(Avg))
+kable(trade_summary)
+
+ggplot(trade_summary, aes(x=TradeType, y=Avg, fill=TradeType)) + geom_bar(stat = "identity") + facet_grid(Type ~ Period) + labs(x = "Export/Import", y = "Average") + ggtitle("Three Year(2013-2014) Average Span")
+```
+
+<span style="color:green">&nbsp;**From examining the plot above, it shows more services are exported than goods. However number of goods exported and imported are much higher than the services.**</span>
+
+</div>
+
+### <span style="color:#4A9586;">1. Calculate the average goods export for each month over the three-year span.</span>
+<div style="border: 3px solid #4A9586;">
+
+```{r}
+kable(trade_summary %>% filter(Type == "Goods" & TradeType == "Exports"))
+```
+
+</div>
+
+### <span style="color:#4A9586;">2. Calculate the average goods import for each month over the three-year span.<span>
+<div style="border: 3px solid #4A9586;">
+```{r}
+kable(trade_summary %>% filter(Type == "Goods" & TradeType == "Imports"))
+```
+
+</div>
+
+### <span style="color:#4A9586;">3. Calculate the average services export for each month over the three-year span.</span>
+<div style="border: 3px solid #4A9586;">
+
+```{r}
+kable(trade_summary %>% filter(Type == "Services" & TradeType == "Exports"))
+```
+
+</div>
+### <span style="color:#4A9586;">4. Calculate the average services import for each month over the three-year span.</span>
+
+<div style="border: 3px solid #4A9586;">
+
+```{r}
+kable(trade_summary %>% filter(Type == "Services" & TradeType == "Imports"))
+```
+
+</div> <br><br>
