@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<geography>
+ <book id="1">
+  <title>Introduction to Geography</title>
+	<authors>
+		<author>Arthur Getis</author>
+		<author>Judith Getis</author>
+	</authors>
+	<reviews>
+		<review>Easy Read</review>
+		<review>Good Maps</review>
+		<review>Interesting</review>
+	</reviews>
+  </book>
+  <book id="2">
+	<title>Why Geography Matters: More Than Ever</title>
+	<authors>
+		<author>Harm de Blij</author>
+	</authors>
+	<reviews>
+		<review>Educational</review>
+		<review>Engaging</review>
+		<review>Opinionated</review>
+	</reviews>
+  </book>
+  <book id="3">
+	<title>The Revenge of Geography: What the Map Tells Us About Coming Conflicts and the Battle Against Fate</title>
+	<authors>
+		<author>Robert D. Kaplan</author>
+	</authors>
+	<reviews>
+		<review>Philosophical</review>
+		<review>Interesting</review>
+		<review>Historical</review>
+	</reviews>
+  </book>
+</geography>

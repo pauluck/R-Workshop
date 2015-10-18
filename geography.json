@@ -1,0 +1,15 @@
+"Geography" :[ {
+	"name": "Introduction to Geography"
+	"authors": ["Arthur Getis", "Judith Getis"]
+	"reviews": ["Easy Read", "Good Maps", "Interesting"]
+	},
+	{
+	"name": "Why Geography Matters: More Than Ever"
+	"authors": ["Harm de Blij"]
+	"reviews": ["Educational", "Engaging", "Opinionated"]
+	},
+	{
+	"name": "The Revenge of Geography: What the Map Tells Us About Coming Conflicts and the Battle Against Fate"
+	"authors": ["Robert D. Kaplan"]
+	"reviews": ["Philosophical", "Interesting", "Historical"]
+	}]
