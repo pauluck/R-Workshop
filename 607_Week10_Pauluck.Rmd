@@ -1,0 +1,71 @@
+---
+title: "607 Assignment 10 - Web APIs"
+author: "Puneet Auluck"
+date: "November 1, 2015"
+output: html_document
+---
+
+***
+
+
+<span style="color:blue"> **Assignment overview:** </span> Download JSON data provided through New York Times Web API portal into R data frame.
+
+<span style="color:blue"> **Data of choice:** </span> New York Times Best Sellers Books
+
+
+### Step 1: Load required libraries
+```{r message=F, warning=F}
+library(jsonlite)
+library(dplyr)
+library(knitr)
+```
+
+### Step 2: Create wrapper function getBestSeller
+```{r}
+#Get books ranked 1st for the type provided in the argument
+  getBestSeller <- function(uri, format=".json", list_type, rank=1,api_key){
+      json_output    <- fromJSON(paste(uri, format,
+                                 "?list-name=", list_type,
+                                 "&rank=", rank,
+                                 "&api-key=", api_key, 
+                                 sep=""))
+      results       <- json_output$results
+      # book_detail contains list so convert it to data frame and then bind it to results
+      details       <- as.data.frame(results$book_detail)
+      final_output  <- cbind(results, details) %>% select(list_name, rank,title, author, description)
+    
+      return(final_output)
+}
+
+
+```
+
+### Step 3: Get most recent Best Sellers
+
+<span style="color:blue"> Store api-key and base url into variables </span>
+```{r}
+nyt_api_key <- "543adc61e14cf137f5a2121ec35d7d35:4:73310298"
+nyt_uri <- "http://api.nytimes.com/svc/books/v3/lists"
+```
+
+<span style="color:blue"> Call getBestSeller one at a time </span>
+```{r}
+# get hardcover-fiction
+kable(getBestSeller(uri = nyt_uri,list_type = "hardcover-fiction", api_key = nyt_api_key))
+
+# e-book-fiction
+kable(getBestSeller(uri = nyt_uri,list_type = "e-book-fiction", api_key = nyt_api_key))
+
+```
+
+<span style="color:blue"> Or create a vector of items and then call the function </span>
+```{r}
+list_names <- c("hardcover-fiction","e-book-fiction","trade-fiction-paperback", "hardcover-nonfiction")
+best_sellers <- lapply(list_names, function(x) getBestSeller(uri = nyt_uri,list_type = x, api_key = nyt_api_key))
+best_sellers_df <- dplyr::rbind_all(best_sellers)
+kable(best_sellers_df)
+
+```
+
+***
+***
