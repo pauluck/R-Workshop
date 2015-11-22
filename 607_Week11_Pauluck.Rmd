@@ -1,0 +1,147 @@
+---
+title: "IS 607 Week 11 Assignment"
+author: "Puneet Auluck"
+date: "November 21, 2015"
+output: html_document
+---
+
+For Document Classification assignment, I use Craiglist Housing listings to classify the categories they belong to.  I have chosen specifically Staten Island, NY housing listings.  Since this is my very first experiment with text mining, I have followed a similar approach described in Chapter 10 of class book to get a better knowledge of how classification functions.
+
+```{r message=F, warning=F}
+# Packages that will be used later
+library(RCurl)
+library(XML)
+library(stringr)
+library(tm)
+library(RTextTools)
+library(SnowballC)
+```
+
+Web scraping 500 listings and writing them to a file. 
+```{r, eval=FALSE}
+# download 500 housing listing links
+all_links <- character()
+new_results <- "https://newyork.craigslist.org/search/stn/hhh"
+for(i in 1:5){
+  i <- i+1
+  results <- getURL(new_results)
+  results_tree <- htmlParse(results)
+  all_links <- c(all_links, xpathSApply(results_tree, "//a[@class='hdrlnk']", xmlGetAttr, "href"))
+  new_results <- xpathSApply(results_tree, "//link[@rel='next']", xmlGetAttr, "href")
+}
+
+# download the links to local drive
+for(i in 1:length(all_links)){
+  url <- str_c("https://newyork.craigslist.org", all_links[i])
+  tmp <- getURL(url)
+  write(tmp, str_c("c://housing//",i, ".html"))
+  
+}
+
+```
+
+Processing files to get the textual data that is needed for corpus
+```{r}
+# parse out listing text and its category
+n <- 0
+for (i in 1:length(list.files("C://housing//"))){
+  tmp <- readLines(str_c("c://housing//", i, ".html"))
+  tmp <- str_c(tmp, collapse=" ")
+  tmp <- htmlParse(tmp)
+  listing <- xpathSApply(tmp, "//section[@id='postingbody']", xmlValue)
+  category <- xpathSApply(tmp, "//li[@class='crumb category']//a", xmlValue)
+
+  if(length(listing) !=0){
+    n <- n + 1
+    if (i==1) { listing_c <- Corpus(VectorSource(listing)) }
+    else {
+    
+    tmp_corpus <- Corpus(VectorSource(listing))
+    listing_c <- c(listing_c, tmp_corpus)
+    }
+    meta(listing_c[[n]], "category") <- category[1]
+  }
+}
+
+# Place category in a vector.  This will be used to create traning data
+category_labels <- meta(listing_c[[1]])$category
+for (i in 2:length(listing_c)){
+    category_labels <- c(category_labels,meta(listing_c[[i]])$category)
+  
+}
+head(category_labels)
+```
+
+Removing unwanted data in corpus 
+```{r}
+# Data cleanup
+listing_corpus <- listing_c
+listing_corpus <- tm_map(listing_corpus, removeNumbers)
+listing_corpus <- tm_map(listing_corpus, removeWords, words = stopwords("en"))
+listing_corpus <- tm_map(listing_corpus, stemDocument)
+```
+
+Creating a document-text matrix
+```{r}
+
+dtm <- DocumentTermMatrix(listing_corpus)
+dtm
+```
+
+Removing sparsed terms as they might indicate errors that we don't need to analyze
+
+```{r}
+dtm <- removeSparseTerms(dtm, 1-(10/length(listing_corpus)))
+dtm
+
+```
+
+Creating a container where first 250 documents are set to training and the rest up to 500 for testing
+```{r}
+container <- create_container(
+            dtm,
+            labels = category_labels,
+            trainSize =1:250,
+            testSize = 251:500,
+            virgin = FALSE
+            
+)
+```
+
+
+Using supervised models to classify the data
+```{r}
+svm_model <- train_model(container, "SVM")
+tree_model <- train_model(container, "TREE")
+maxent_model <- train_model(container, "MAXENT")
+
+svm_out <- classify_model(container, svm_model)
+tree_out <- classify_model(container, tree_model)
+maxent_out <- classify_model(container, maxent_model)
+
+head(svm_out)
+head(tree_out)
+head(maxent_out)
+
+labels_out <- data.frame(
+    correct_label = category_labels[251:500],
+    svm = as.character(svm_out[,1]),
+    tree = as.character(tree_out[,1]),
+    maxent = as.character(maxent_out[,1]),
+    stringsAsFactors = F)
+
+table(labels_out[,1]==labels_out[,2])
+prop.table(table(labels_out[,1]==labels_out[,2]))
+
+table(labels_out[,1]==labels_out[,3])
+prop.table(table(labels_out[,1]==labels_out[,3]))
+
+table(labels_out[,1]==labels_out[,4])
+prop.table(table(labels_out[,1]==labels_out[,4]))
+
+```
+
+It appears all three models do not classify the documents correctly.  The maximum entropy model predicts it most closely at 52%.  Out of 250 listings, it got 130 correct. The model SVM followed with 43% and random forest did poorly at 30%.  There could be number of factors that can be considered for not producing desired results.  One could be that there was not enough textual data for listings to analyze or compare. Therefore, we might need more training data to run the results again. 
+
+***
+***
