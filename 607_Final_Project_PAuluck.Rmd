@@ -1,0 +1,188 @@
+---
+title: "IS 607 Final Project"
+author: "Puneet Auluck"
+date: "December 13, 2015"
+output: html_document
+---
+
+Objective
+========================================================
+My objective for this project is to find best deals on NY hotels in January 2016 on popular travel sites.  For now, I have decided to use the first month of the year but it can be easily tweaked to view other months. 
+
+### Load packages
+```{r message=F, warning=F}
+# Load packages needed
+library(RCurl)
+library(XML)
+library(stringr)
+library(scatterplot3d) 
+library(plotrix) 
+library(ggplot2)
+library(dplyr)
+```
+
+### Create getHotelBookings() wrapper function
+```{r}
+# getHotelBookings wrapper function to get bookings
+getHotelBookings <- function (url, date){
+  #print(url)
+  results <- getURL(url)
+  results_tree <- htmlParse(results)
+  hotel_db_tmp <- as.character()
+  hotels <- as.character()
+  
+  hotels <- xpathSApply(results_tree,"//div[@class='item_prices cf']//h3",xmlValue)
+  
+  # Hotel option deal 1
+  site_1 <- xpathSApply(results_tree,"//div[@class='item_main']//li[1]//em",xmlValue)
+  price_1 <- xpathSApply(results_tree,"//div[@class='item_main']//li[1]//strong",xmlValue)
+  hotel_db_tmp <- cbind(hotels,site_1,price_1,date)
+  
+  # Hotel option deal 2
+  site_2 <- xpathSApply(results_tree,"//div[@class='item_main']//li[2]//em",xmlValue)
+  price_2 <- xpathSApply(results_tree,"//div[@class='item_main']//li[2]//strong",xmlValue)
+  hotel_db_tmp <- rbind(hotel_db_tmp, cbind(hotels,site_2,price_2,date))
+  
+  # Hotel option deal 1
+  site_3 <- xpathSApply(results_tree,"//div[@class='item_main']//li[3]//em",xmlValue)
+  price_3 <- xpathSApply(results_tree,"//div[@class='item_main']//li[3]//strong",xmlValue)
+  hotel_db_tmp <- as.data.frame(rbind(hotel_db_tmp, cbind(hotels,site_3,price_3,date)))
+  
+  return(hotel_db_tmp)
+}
+```
+
+### Web scape bookings for each day in Jan '16. The pages scraped are saved to csv file.  The csv file is then loaded to github for further analysis
+```{r}
+# Construct part of URL
+base_url <- "http://www.trivago.com/?iPathId=34812&iGeoDistanceItem=0&aDateRange%5Barr%5D=2016-"
+date_end <- "&aDateRange%5Bdep%5D=2016-"
+end_url <- "&iRoomType=7&cpt=3475703%2C199&aHotelTestClassifier=&aPriceRange%5Bfrom%5D=0&aPriceRange%5Bto%5D=0&iIncludeAll=0&aPartner=&iViewType=0&isRetina=false&bIsSeoPage=false&bIsSitemap=false&"
+
+# Loop through each day of bookings in January 2016
+dates <- 1:30
+hotel_db <- as.character()
+for (i in dates){
+  url_tmp <- paste(base_url,"01-",i,date_end,"01-",i+1, end_url,sep="")
+  hotel_date_added <- getHotelBookings(url_tmp,paste("2016-01-",formatC(i, width=2, flag="0"),sep=""))
+  hotel_db <- as.data.frame(rbind(hotel_db,hotel_date_added))
+}
+
+# Don't forget 01/31-02/01 data
+url_tmp <- paste(base_url,"01-31",date_end,"02-01",end_url,sep="")
+hotel_date_added <- getHotelBookings(url_tmp,"2016-01-31")
+hotel_db <- as.data.frame(rbind(hotel_db,hotel_date_added))
+
+colnames(hotel_db) <- c("hotel","site","price","check_in_date")
+head(hotel_db)
+```
+
+
+### Clean up
+```{r}
+hotel_db_cleaned <- hotel_db
+hotel_db_cleaned$hotel <- str_trim(hotel_db_cleaned$hotel)
+hotel_db_cleaned$site <- str_trim(hotel_db_cleaned$site)
+hotel_db_cleaned$price <- gsub(".*\\$","",hotel_db_cleaned$price)
+hotels <- hotel_db_cleaned
+head(hotels)
+```
+
+# Write to csv
+```{r, eval=FALSE}
+# Once the pages are scraped, write to csv file that can be used for analysis
+# It will be placed on github to be read from there
+write.csv(hotels, file = "c:\\607_final_project\\hotel_data.csv", row.names = FALSE)
+```
+
+### For rmd knitting process to be faster, I stored csv file to github and used the link from there.  
+```{r message=F, warning=F}
+# Read csv file from github
+# Comment out if pages need to be scraped again
+#csvfile <- "https://raw.githubusercontent.com/pauluck/R-Workshop/master/hotel_data.csv"
+#hotels <- read.csv(csvfile, header = TRUE, sep = ",", na.strings=c("NA", "NULL"))
+```
+
+```{r message=F, warning=F}
+# Filter out listings to subset of priced ranging from $10-$200
+hotels$price <- as.numeric(as.character(hotels$price))
+hotels$site <- as.character(hotels$site)
+hotels$check_in_date <- as.character(hotels$check_in_date)
+hotels$hotel <- as.character(hotels$hotel)
+hotels_1 <- hotels[hotels$price>10 & hotels$price<200,]
+head(hotels_1)
+```
+
+### Find the average of booking rate in January 
+```{r message=F, warning=F}
+# Find average price of the month - do not count null or n/a values
+avg_price <- hotels_1 %>% select(price) %>% summarise(avg=mean(price, na.rm=TRUE))
+avg_price
+```
+
+### Plot prices for each day scraped
+```{r message=F, warning=F}
+# plot all hotel prices for each day
+hotel_date_split <- hotels %>% select(site,price,hotel,check_in_date) %>% mutate(date = gsub("(2016-01-)(\\d\\d)","\\2",check_in_date))
+p1 <- ggplot(data = hotel_date_split, aes(x = hotel, y = price, group=hotel))
+p1 + geom_point(outlier.shape = 3) + theme(axis.ticks = element_blank(), axis.text.x = element_blank()) + facet_wrap(~date)
+```
+
+The price appears to be steady for each day.  
+
+### Find the best deals for each day
+```{r message=F, warning=F}
+
+# Find minimum price of most popular hotels for each day
+best_deal <- as.data.frame(hotels_1 %>% filter(price>10) %>% group_by(check_in_date) %>% 
+                    summarize(price=price[which.min(price)],
+                              hotel=hotel[which.min(price)],
+                              site=site[which.min(price)]))
+head(best_deal)
+```
+
+### Which hotel has the best deals in January?
+```{r message=F, warning=F}
+# Which hotel has the best deals in January
+m <- ggplot(data=best_deal, aes(best_deal$hotel))                
+m + geom_histogram(aes(fill = ..count..), binwidth = 0.1) +
+  ggtitle("Hotels with Best Deals") +
+  labs(x="Hotels",y="Frequency") + 
+  theme(plot.title = element_text(family = "Trebuchet MS", color="#666666", face="bold", size=16, hjust=0)) +
+  theme(axis.title = element_text(family = "Trebuchet MS", color="#666666", face="bold", size=16)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+ 
+
+### Which site delivers the most best deals?
+```{r message=F, warning=F}
+# Which site delivers the most best deals
+best_site_feq <- best_deal %>% select(site,price) %>%
+  group_by(site) %>%
+  summarise(count=n()) 
+best_site_pct <- best_site_feq %>% mutate(pct=paste(site," - ", formatC(count/sum(count)*100,digits=2),"%", sep=""))
+
+pie3D(best_site_pct$count,labels=best_site_pct$pct,explode=0.1,
+  	main="Best Hotel Sites")
+```
+
+
+```{r message=F, warning=F}
+# Plot all best deals
+dev.off
+with(best_deal, {
+  s3d <- scatterplot3d(as.factor(hotel), as.factor(check_in_date), price,        
+                       color="green", pch=19,        
+                       type="h",                    
+                       main="Best Deals Price for Each Day",
+                       xlab="hotels",
+                       ylab="Dates",
+                       zlab="Price")
+  s3d.coords <- s3d$xyz.convert(site, check_in_date, price) 
+  text(s3d.coords$x, s3d.coords$y, labels="")
+})
+```
+
+
+
+
